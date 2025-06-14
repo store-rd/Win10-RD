@@ -8,6 +8,13 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Alpine.js for state management -->
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- GSAP for Professional Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,29 +24,38 @@
         :root {
             --glow-color: rgb(79, 142, 255);
             --bg-color: #0d1117;
-            --primary-glow: rgba(79, 142, 255, 0.15);
-            --secondary-glow: rgba(120, 119, 198, 0.15);
         }
         
-        /* General Body Styling with Static Gradient Background */
         body {
             font-family: 'Tajawal', sans-serif;
             background-color: var(--bg-color);
             color: #c9d1d9;
             overflow-x: hidden;
-            background-image: 
-                radial-gradient(at 20% 20%, var(--primary-glow) 0px, transparent 50%),
-                radial-gradient(at 80% 20%, var(--secondary-glow) 0px, transparent 50%),
-                radial-gradient(at 20% 80%, var(--secondary-glow) 0px, transparent 50%),
-                radial-gradient(at 80% 80%, var(--primary-glow) 0px, transparent 50%);
-            background-attachment: fixed;
+            position: relative;
+        }
+
+        /* Interactive Spotlight Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            background: radial-gradient(
+                circle 400px at var(--x, 50%) var(--y, 50%),
+                rgba(79, 142, 255, 0.15),
+                transparent 80%
+            );
+            transition: background 0.1s ease-out;
         }
 
         .font-orbitron {
             font-family: 'Orbitron', sans-serif;
         }
         
-        /* Glassmorphism & Glow Effects */
         .glass-ui {
             background: rgba(13, 17, 23, 0.65);
             backdrop-filter: blur(12px) saturate(180%);
@@ -58,21 +74,6 @@
             box-shadow: 0 0 20px rgba(var(--glow-color), 0.8), 0 0 40px rgba(var(--glow-color), 0.5);
         }
 
-        /* Header Styling */
-        header.glass-ui {
-            transition: background-color 0.5s ease;
-        }
-
-        /* Hero Section Styling */
-        #hero {
-            perspective: 1000px; /* For 3D parallax effect */
-        }
-        #hero h2, #hero p, #hero a {
-            will-change: transform;
-            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-        }
-
-        /* Gradient Text Style */
         .gradient-text {
             background: linear-gradient(90deg, #a7b5ff, #3b82f6);
             -webkit-background-clip: text;
@@ -81,20 +82,14 @@
             text-fill-color: transparent;
         }
 
-        /* Feature Cards Styling with Animation */
         .feature-card {
             border: 1px solid transparent;
             position: relative;
             overflow: hidden;
-            animation: float 6s ease-in-out infinite;
-        }
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-7px); }
-            100% { transform: translateY(0px); }
+            opacity: 0; /* Initially hidden for GSAP animation */
+            transform: translateY(50px);
         }
         .feature-card:hover {
-            animation-play-state: paused; /* Pause floating on hover */
             transform: translateY(-10px) !important;
         }
         .feature-card:before {
@@ -111,21 +106,9 @@
         .feature-card:hover:before {
             opacity: 1;
         }
-        
-        /* Scroll Animations */
-        .scroll-reveal {
-            opacity: 0;
-            transform: translateY(40px);
-            transition: opacity 0.8s cubic-bezier(0.5, 0, 0, 1), transform 0.8s cubic-bezier(0.5, 0, 0, 1);
-        }
-        .scroll-reveal.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
 
-        /* Section Separator Style */
         .section-separator {
-            height: 2px; /* Made slightly thicker */
+            height: 2px;
             width: 80%;
             margin: 0 auto;
             background: linear-gradient(90deg, transparent, rgba(79, 142, 255, 0.6), transparent);
@@ -133,7 +116,7 @@
         }
     </style>
 </head>
-<body>
+<body x-data>
     <!-- Header -->
     <header class="fixed top-0 left-0 right-0 z-50 glass-ui">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -142,8 +125,9 @@
             </h1>
             <nav class="hidden md:flex space-x-8 space-x-reverse text-lg">
                 <a href="#hero" class="hover:text-blue-400 transition-colors duration-300">الرئيسية</a>
-                <a href="#philosophy" class="hover:text-blue-400 transition-colors duration-300">الفلسفة</a>
                 <a href="#features" class="hover:text-blue-400 transition-colors duration-300">المميزات</a>
+                <a href="#requirements" class="hover:text-blue-400 transition-colors duration-300">المتطلبات</a>
+                <a href="#faq" class="hover:text-blue-400 transition-colors duration-300">الأسئلة</a>
                 <a href="#download" class="hover:text-blue-400 transition-colors duration-300">التحميل</a>
             </nav>
             <a href="#download" class="hidden md:block bg-blue-600 text-white font-bold py-2 px-6 rounded-lg glow-button">
@@ -155,24 +139,24 @@
     <!-- Hero Section -->
     <section id="hero" class="min-h-screen flex items-center justify-center text-center relative">
         <div class="z-10 px-6">
-            <h2 id="hero-title" class="text-5xl md:text-7xl lg:text-8xl font-black font-orbitron text-white mb-4" style="text-shadow: 0 0 25px rgba(79, 142, 255, 0.9);">
+            <h2 class="text-5xl md:text-7xl lg:text-8xl font-black font-orbitron text-white mb-4" style="text-shadow: 0 0 25px rgba(79, 142, 255, 0.9);">
                 <span class="gradient-text">Windows 10</span> RD
             </h2>
-            <p id="hero-subtitle" class="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-8">
+            <p class="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-8">
                 تجربة نظام أعيد تعريفها. السرعة، القوة، والجمال في حزمة واحدة.
             </p>
-            <a id="hero-button" href="#download" class="bg-blue-600 text-white font-bold py-4 px-10 text-xl rounded-lg inline-flex items-center justify-center gap-3 glow-button animate-pulse">
+            <a href="#download" class="bg-blue-600 text-white font-bold py-4 px-10 text-xl rounded-lg inline-flex items-center justify-center gap-3 glow-button animate-pulse">
                 اكتشف المستقبل الآن
             </a>
         </div>
     </section>
 
     <!-- Section Separator -->
-    <div class="section-separator scroll-reveal"></div>
+    <div class="section-separator opacity-0"></div>
 
     <!-- Philosophy Section -->
     <section id="philosophy" class="py-20 lg:py-24 relative">
-        <div class="container mx-auto px-6 text-center scroll-reveal">
+        <div class="container mx-auto px-6 text-center opacity-0">
             <h3 class="text-4xl md:text-5xl font-bold font-orbitron gradient-text">بنية تحتية للمحترفين. قوة مطلقة بين يديك.</h3>
             <p class="text-lg text-gray-400 mt-6 max-w-3xl mx-auto">
                 استوحينا جوهر القوة من نسخة LTSC، وصقلناها لتصبح RD. كل مكون في النظام تم هندسته لهدف واحد: الأداء الأقصى والاستقرار الصخري.
@@ -183,77 +167,152 @@
     <!-- Features Section -->
     <section id="features" class="pb-24 pt-12 relative">
         <div class="container mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Feature 1: Speed -->
-                <div class="glass-ui p-8 rounded-2xl feature-card scroll-reveal">
-                    <div class="flex items-center justify-center h-16 w-16 mb-6 mx-auto">
+            <div id="features-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Features will be injected here by JS if needed, or static like now -->
+                <div class="glass-ui p-8 rounded-2xl feature-card">
+                    <!-- Content... -->
+                     <div class="flex items-center justify-center h-16 w-16 mb-6 mx-auto">
                         <svg class="h-10 w-10 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                     </div>
                     <h4 class="text-2xl font-bold mb-3 text-center text-white">سرعة استجابة فائقة</h4>
-                    <p class="text-gray-400 text-center">
-                        تم تجريد Win10 RD من كل ما يبطئك. لا تطبيقات غير ضرورية، ولا خدمات تستهلك مواردك في الخلفية. النتيجة؟ إقلاع أسرع وتجربة خالية من التقطيع.
-                    </p>
+                    <p class="text-gray-400 text-center">تم تجريد Win10 RD من كل ما يبطئك. لا تطبيقات غير ضرورية، ولا خدمات تستهلك مواردك في الخلفية.</p>
                 </div>
-                <!-- Feature 2: Stability -->
-                <div class="glass-ui p-8 rounded-2xl feature-card scroll-reveal" style="animation-delay: 0.2s;">
+                 <div class="glass-ui p-8 rounded-2xl feature-card">
                     <div class="flex items-center justify-center h-16 w-16 mb-6 mx-auto">
                          <svg class="h-10 w-10 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                     </div>
                     <h4 class="text-2xl font-bold mb-3 text-center text-white">استقرار لا يتزعزع</h4>
-                    <p class="text-gray-400 text-center">
-                        يعتمد RD على نموذج الدعم طويل الأمد (LTSC). تحديثات أمنية فقط، بدون تحديثات الميزات المفاجئة التي قد تعطل أعمالك. نظامك يبقى قوياً ومستقراً لسنوات.
-                    </p>
+                    <p class="text-gray-400 text-center">يعتمد RD على نموذج LTSC. تحديثات أمنية فقط، بدون تحديثات الميزات المفاجئة التي قد تعطل أعمالك.</p>
                 </div>
-                <!-- Feature 3: Control & Privacy -->
-                <div class="glass-ui p-8 rounded-2xl feature-card scroll-reveal" style="animation-delay: 0.4s;">
+                <div class="glass-ui p-8 rounded-2xl feature-card">
                      <div class="flex items-center justify-center h-16 w-16 mb-6 mx-auto">
                         <svg class="h-10 w-10 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                      </div>
                     <h4 class="text-2xl font-bold mb-3 text-center text-white">التحكم والخصوصية</h4>
-                    <p class="text-gray-400 text-center">
-                        في RD، تم تعطيل خدمات التتبع (Telemetry). أنت من يقرر ما يشاركه نظامك، وأنت من يدير تحديثاتك بنفسك. لا مفاجآت، لا بيانات مخفية، فقط سيطرة كاملة.
-                    </p>
+                    <p class="text-gray-400 text-center">تم تعطيل خدمات التتبع (Telemetry). أنت من يقرر، وأنت من يدير تحديثاتك. سيطرة كاملة.</p>
                 </div>
-                <!-- Feature 4: Gaming Optimization -->
-                <div class="glass-ui p-8 rounded-2xl feature-card scroll-reveal" style="animation-delay: 0.1s;">
+                 <div class="glass-ui p-8 rounded-2xl feature-card">
                     <div class="flex items-center justify-center h-16 w-16 mb-6 mx-auto">
                         <svg class="h-10 w-10 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
                     <h4 class="text-2xl font-bold mb-3 text-center text-white">محسّن للألعاب</h4>
-                    <p class="text-gray-400 text-center">
-                        كل مورد في جهازك موجه لخدمة لعبتك. ستحصل على إطارات أعلى (FPS) وزمن وصول أقل لتجربة لعب سلسة ومستقرة حتى في أكثر اللحظات حماساً.
-                    </p>
+                    <p class="text-gray-400 text-center">كل مورد في جهازك موجه لخدمة لعبتك. ستحصل على إطارات أعلى (FPS) وزمن وصول أقل لتجربة سلسة.</p>
                 </div>
-                <!-- Feature 5: Pro Workflow -->
-                <div class="glass-ui p-8 rounded-2xl feature-card scroll-reveal" style="animation-delay: 0.3s;">
+                <div class="glass-ui p-8 rounded-2xl feature-card">
                     <div class="flex items-center justify-center h-16 w-16 mb-6 mx-auto">
                         <svg class="h-10 w-10 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
                     </div>
                     <h4 class="text-2xl font-bold mb-3 text-center text-white">بيئة عمل للمبدعين</h4>
-                    <p class="text-gray-400 text-center">
-                        بيئة عمل نظيفة ومستقرة تضمن تشغيل برامجك المعقدة مثل Adobe Suite و-AutoCAD وبرامج المحاكاة بكفاءة قصوى وبدون أي مقاطعات.
-                    </p>
+                    <p class="text-gray-400 text-center">بيئة عمل نظيفة ومستقرة تضمن تشغيل برامجك المعقدة مثل Adobe Suite و AutoCAD بكفاءة قصوى.</p>
                 </div>
-                <!-- Feature 6: Lightweight Footprint -->
-                <div class="glass-ui p-8 rounded-2xl feature-card scroll-reveal" style="animation-delay: 0.5s;">
+                <div class="glass-ui p-8 rounded-2xl feature-card">
                     <div class="flex items-center justify-center h-16 w-16 mb-6 mx-auto">
                         <svg class="h-10 w-10 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>
                     </div>
                     <h4 class="text-2xl font-bold mb-3 text-center text-white">بصمة نظام خفيفة</h4>
-                    <p class="text-gray-400 text-center">
-                        يشغل مساحة أقل على القرص ويستهلك ذاكرة (RAM) أقل بكثير، مما يجعله مثالياً للأجهزة المتنوعة ويمنحها حياة جديدة وأداء أسرع.
-                    </p>
+                    <p class="text-gray-400 text-center">يشغل مساحة أقل على القرص ويستهلك ذاكرة أقل، مما يجعله مثالياً للأجهزة المتنوعة ويمنحها أداء أسرع.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- NEW: System Requirements Section -->
+    <section id="requirements" class="py-24 relative">
+        <div class="container mx-auto px-6 opacity-0">
+            <div class="text-center mb-12">
+                <h3 class="text-4xl md:text-5xl font-bold font-orbitron gradient-text">متطلبات النظام</h3>
+            </div>
+            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 text-center">
+                <div class="glass-ui p-8 rounded-2xl">
+                    <h4 class="text-2xl font-bold mb-4 text-white">الحد الأدنى</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><strong>المعالج:</strong> 1 GHz dual-core</li>
+                        <li><strong>الذاكرة:</strong> 2 GB RAM</li>
+                        <li><strong>التخزين:</strong> 16 GB</li>
+                        <li><strong>الرسوميات:</strong> DirectX 9 compatible</li>
+                    </ul>
+                </div>
+                <div class="glass-ui p-8 rounded-2xl border-2 border-blue-500 shadow-lg shadow-blue-500/20">
+                    <h4 class="text-2xl font-bold mb-4 text-white">الموصى به</h4>
+                     <ul class="space-y-2 text-gray-300">
+                        <li><strong>المعالج:</strong> 2 GHz quad-core or better</li>
+                        <li><strong>الذاكرة:</strong> 4 GB RAM or more</li>
+                        <li><strong>التخزين:</strong> 32 GB SSD</li>
+                        <li><strong>الرسوميات:</strong> DirectX 12 compatible</li>
+                    </ul>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Section Separator -->
-    <div class="section-separator scroll-reveal"></div>
+    <div class="section-separator opacity-0"></div>
+
+    <!-- NEW: FAQ Section -->
+    <section id="faq" class="py-24 relative" x-data="{ open: 1 }">
+        <div class="container mx-auto px-6 opacity-0">
+            <div class="text-center mb-12">
+                <h3 class="text-4xl md:text-5xl font-bold font-orbitron gradient-text">أسئلة شائعة</h3>
+            </div>
+            <div class="max-w-3xl mx-auto space-y-4">
+                <!-- Question 1 -->
+                <div class="glass-ui rounded-xl overflow-hidden">
+                    <button @click="open = (open === 1 ? 0 : 1)" class="w-full text-right p-6 flex justify-between items-center">
+                        <span class="text-xl font-bold text-white">ما هو الفرق الجوهري بين Win10 RD والنسخة العادية؟</span>
+                        <span class="text-blue-400 transition-transform duration-300" :class="{'rotate-45': open === 1}">+</span>
+                    </button>
+                    <div x-show="open === 1" x-collapse>
+                        <p class="p-6 pt-0 text-gray-400">الفرق الأساسي هو أن RD نسخة "مُجردة". تم إزالة كل التطبيقات والخدمات غير الضرورية التي تبطئ النظام وتجمع البيانات، مع الحفاظ على النواة الأساسية القوية وتحديثاتها الأمنية، مما ينتج عنه أداء أسرع بكثير وخصوصية أعلى.</p>
+                    </div>
+                </div>
+                <!-- Question 2 -->
+                <div class="glass-ui rounded-xl overflow-hidden">
+                    <button @click="open = (open === 2 ? 0 : 2)" class="w-full text-right p-6 flex justify-between items-center">
+                        <span class="text-xl font-bold text-white">هل النظام آمن ويتلقى تحديثات؟</span>
+                        <span class="text-blue-400 transition-transform duration-300" :class="{'rotate-45': open === 2}">+</span>
+                    </button>
+                    <div x-show="open === 2" x-collapse>
+                         <p class="p-6 pt-0 text-gray-400">نعم، وبشكل كامل. يعتمد RD على بنية LTSC التي تتلقى تحديثات أمنية شهرية مباشرة من مايكروسوفت لسنوات طويلة. أنت تحصل على الحماية الكاملة بدون تحديثات الميزات غير المرغوب فيها.</p>
+                    </div>
+                </div>
+                <!-- Question 3 -->
+                <div class="glass-ui rounded-xl overflow-hidden">
+                    <button @click="open = (open === 3 ? 0 : 3)" class="w-full text-right p-6 flex justify-between items-center">
+                        <span class="text-xl font-bold text-white">هل يمكنني تثبيت برامجي وألعابي المفضلة؟</span>
+                         <span class="text-blue-400 transition-transform duration-300" :class="{'rotate-45': open === 3}">+</span>
+                    </button>
+                    <div x-show="open === 3" x-collapse>
+                        <p class="p-6 pt-0 text-gray-400">بالتأكيد. النظام متوافق 100% مع جميع برامج وألعاب الويندوز القياسية. ستلاحظ أنها تعمل بشكل أفضل وأكثر سلاسة بسبب توفر المزيد من موارد النظام.</p>
+                    </div>
+                </div>
+                <!-- NEW Question 4 -->
+                <div class="glass-ui rounded-xl overflow-hidden">
+                    <button @click="open = (open === 4 ? 0 : 4)" class="w-full text-right p-6 flex justify-between items-center">
+                        <span class="text-xl font-bold text-white">كيف أقوم بتثبيت النظام؟</span>
+                         <span class="text-blue-400 transition-transform duration-300" :class="{'rotate-45': open === 4}">+</span>
+                    </button>
+                    <div x-show="open === 4" x-collapse>
+                        <div class="p-6 pt-0 text-gray-400 space-y-4">
+                            <p>لتثبيت النظام، ستحتاج إلى مفتاح تخزين USB (فلاشة) بسعة 8GB على الأقل وبرنامج مجاني يسمى <a href="https://rufus.ie/ar/" target="_blank" class="text-blue-400 hover:underline">Rufus</a> لإنشاء محرك أقراص قابل للإقلاع.</p>
+                            <ol class="list-decimal list-inside space-y-2 pr-4">
+                                <li>قم بتوصيل مفتاح التخزين USB بجهاز الكمبيوتر.</li>
+                                <li>افتح برنامج Rufus.</li>
+                                <li>اختر مفتاح التخزين USB الخاص بك من قائمة "الجهاز".</li>
+                                <li>بجانب "اختيار الإقلاع"، اضغط على "اختر" وحدد ملف `Windows_10_RD.iso` الذي قمت بتنزيله.</li>
+                                <li>اترك الإعدادات الأخرى كما هي (Partition scheme: GPT, Target system: UEFI).</li>
+                                <li>اضغط على "ابدأ" وانتظر حتى تكتمل العملية.</li>
+                                <li>أعد تشغيل الكمبيوتر وقم بالإقلاع من مفتاح التخزين USB لبدء تثبيت Win10 RD.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Download Section -->
     <section id="download" class="py-24 relative">
-        <div class="container mx-auto px-6 text-center scroll-reveal">
+        <div class="container mx-auto px-6 text-center opacity-0">
             <h3 class="text-4xl md:text-5xl font-bold font-orbitron text-white mb-4">هل أنت مستعد؟</h3>
             <p class="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
                 قم بتنزيل نسختك الآن وادخل إلى عالم جديد من الأداء والجمال.
@@ -263,7 +322,7 @@
                 <span>تحميل Windows 10 RD</span>
             </a>
             <p class="text-gray-500 mt-4 text-sm">
-                النسخة: 24H1 | الحجم: 4.5GB | بصيغة ISO
+                النسخة: 24H1 | الحجم: 3.5GB | بصيغة ISO
             </p>
         </div>
     </section>
@@ -277,33 +336,40 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Hero Parallax Effect ---
-            const hero = document.getElementById('hero');
-            const title = document.getElementById('hero-title');
-            const subtitle = document.getElementById('hero-subtitle');
-            const button = document.getElementById('hero-button');
-
-            hero.addEventListener('mousemove', (e) => {
-                const { clientX, clientY } = e;
-                const x = (clientX / window.innerWidth - 0.5) * -50;
-                const y = (clientY / window.innerHeight - 0.5) * -30;
-                
-                title.style.transform = `translate(${x / 2}px, ${y / 2}px) rotateX(${-y / 20}deg) rotateY(${x / 20}deg)`;
-                subtitle.style.transform = `translate(${x / 3}px, ${y / 3}px)`;
-                button.style.transform = `translate(${x / 4}px, ${y / 4}px)`;
+            // Interactive Spotlight Effect
+            window.addEventListener('mousemove', e => {
+                document.body.style.setProperty('--x', `${e.clientX}px`);
+                document.body.style.setProperty('--y', `${e.clientY}px`);
             });
 
-            // --- Scroll Reveal Animation ---
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                    }
+            // GSAP Animations
+            gsap.registerPlugin(ScrollTrigger);
+            
+            // Animate sections
+            const sections = ['#philosophy .container', '#requirements .container', '#faq .container', '#download .container', '.section-separator'];
+            sections.forEach(sec => {
+                gsap.to(sec, {
+                    scrollTrigger: {
+                        trigger: sec,
+                        start: "top 85%",
+                        toggleActions: "play none none none"
+                    },
+                    opacity: 1,
+                    duration: 1
                 });
-            }, { threshold: 0.1 });
+            });
 
-            document.querySelectorAll('.scroll-reveal').forEach(el => {
-                observer.observe(el);
+            // Staggered animation for feature cards
+            gsap.to(".feature-card", {
+                scrollTrigger: {
+                    trigger: "#features-grid",
+                    start: "top 80%",
+                },
+                opacity: 1,
+                y: 0,
+                stagger: 0.15,
+                duration: 0.8,
+                ease: "power2.out"
             });
         });
     </script>
